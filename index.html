@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PulseHealth - Health Tracker with Google Login</title>
+    <title>PulseHealth - 30-Day Fitness & Health Tracker</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Identity Services (GSI) SDK -->
+    <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -32,97 +33,195 @@
                             700: '#047857',
                             900: '#064e3b',
                         },
-                        teal: {
-                            500: '#14b8a6',
-                            600: '#0d9488',
+                        indigo: {
+                            500: '#6366f1',
+                            600: '#4f46e5',
                         }
                     }
                 }
             }
         }
     </script>
+
     <style>
+        :root {
+            --bg-main: #f0fdf4;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(209, 250, 229, 0.8);
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --header-bg: rgba(255, 255, 255, 0.88);
+            --modal-bg: #ffffff;
+            --sub-card-bg: #f8fafc;
+        }
+
+        html.dark {
+            --bg-main: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.88);
+            --card-border: rgba(30, 41, 59, 0.8);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --header-bg: rgba(15, 23, 42, 0.88);
+            --modal-bg: #1e293b;
+            --sub-card-bg: #111827;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0fdf4;
-            color: #0f172a;
-            user-select: none; /* Anti-copy protection */
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
         }
+
         .glass-card {
-            background: rgba(255, 255, 255, 0.92);
+            background: var(--card-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(209, 250, 229, 0.8);
+            border: 1px solid var(--card-border);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
+
+        .header-blur {
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+        }
+
+        .modal-card {
+            background-color: var(--modal-bg);
+            color: var(--text-primary);
+        }
+
+        .sub-card {
+            background-color: var(--sub-card-bg);
+        }
+
         .water-wave {
             transition: height 0.5s ease-in-out, background-color 0.3s;
         }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+
+        /* REALISTIC ANIMATED PERSON KEYFRAMES */
+        @keyframes personJumpingJacksArms {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-130deg); }
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        @keyframes personJumpingJacksArmsR {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(130deg); }
         }
-        ::-webkit-scrollbar-thumb {
-            background: #10b981;
-            border-radius: 4px;
+        @keyframes personJumpingJacksLegL {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-22deg); }
         }
+        @keyframes personJumpingJacksLegR {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(22deg); }
+        }
+
+        .anim-person-arm-l { animation: personJumpingJacksArms 1.1s infinite ease-in-out; transform-origin: 40px 38px; }
+        .anim-person-arm-r { animation: personJumpingJacksArmsR 1.1s infinite ease-in-out; transform-origin: 60px 38px; }
+        .anim-person-leg-l { animation: personJumpingJacksLegL 1.1s infinite ease-in-out; transform-origin: 44px 70px; }
+        .anim-person-leg-r { animation: personJumpingJacksLegR 1.1s infinite ease-in-out; transform-origin: 56px 70px; }
+
+        @keyframes personSquatMotion {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(22px); }
+        }
+        @keyframes personSquatKneeBend {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.72); }
+        }
+        .anim-person-squat-torso { animation: personSquatMotion 1.4s infinite ease-in-out; }
+        .anim-person-squat-legs { animation: personSquatKneeBend 1.4s infinite ease-in-out; transform-origin: bottom center; }
+
+        @keyframes personPushupMotion {
+            0%, 100% { transform: translateY(0px) rotate(-8deg); }
+            50% { transform: translateY(18px) rotate(-8deg); }
+        }
+        .anim-person-pushup { animation: personPushupMotion 1.5s infinite ease-in-out; transform-origin: 20px 85px; }
+
+        @keyframes personHighKneesL {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-55deg); }
+        }
+        @keyframes personHighKneesR {
+            0%, 100% { transform: rotate(-55deg); }
+            50% { transform: rotate(0deg); }
+        }
+        .anim-person-knee-l { animation: personHighKneesL 0.8s infinite ease-in-out; transform-origin: 44px 70px; }
+        .anim-person-knee-r { animation: personHighKneesR 0.8s infinite ease-in-out; transform-origin: 56px 70px; }
+
+        @keyframes meditateBreathe {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-4px) scale(1.02); }
+        }
+        .anim-person-meditate { animation: meditateBreathe 3s infinite ease-in-out; transform-origin: center center; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between" oncontextmenu="return false;" onkeydown="return handleKeyProtection(event);">
 
-    <!-- Header / Navigation -->
-    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-emerald-100 shadow-sm">
+    <header class="sticky top-0 z-40 header-blur border-b border-emerald-100 dark:border-slate-800 shadow-sm transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 
                 <!-- Brand Logo -->
                 <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-200">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                         </svg>
                     </div>
                     <div>
-                        <span class="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">PulseHealth</span>
+                        <span class="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">PulseHealth</span>
                         <span class="text-[10px] block text-slate-400 font-semibold -mt-1">by Keerthan Kamboja</span>
                     </div>
                 </div>
 
                 <!-- Desktop Navigation Links -->
                 <nav class="hidden md:flex space-x-1 lg:space-x-2">
-                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-emerald-700 bg-emerald-50">Dashboard</button>
-                    <button id="nav-exercises" onclick="switchTab('exercises')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Exercises</button>
-                    <button id="nav-diet" onclick="switchTab('diet')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Diet</button>
-                    <button id="nav-water" onclick="switchTab('water')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Water</button>
-                    <button id="nav-walking" onclick="switchTab('walking')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Steps</button>
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40">Dashboard</button>
+                    <button id="nav-target30" onclick="switchTab('target30')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50/50">🎯 30-Day Target</button>
+                    <button id="nav-exercises" onclick="switchTab('exercises')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50/50">Exercises</button>
+                    <button id="nav-diet" onclick="switchTab('diet')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50/50">Diet</button>
+                    <button id="nav-water" onclick="switchTab('water')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50/50">Water</button>
+                    <button id="nav-walking" onclick="switchTab('walking')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50/50">Steps</button>
                 </nav>
 
-                <!-- Auth & Config Area -->
-                <div class="flex items-center space-x-3">
-                    <!-- Client ID Config Button -->
-                    <button onclick="openConfigModal()" title="Configure Google OAuth Client ID" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                <!-- Right Controls & Authentication -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div title="Active Daily Streak" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-bold text-xs shadow-sm">
+                        <span class="text-base animate-pulse">🔥</span>
+                        <span id="streak-counter-header">0 Days</span>
+                    </div>
+
+                    <button onclick="toggleDarkMode()" id="theme-toggle-btn" title="Toggle Dark/Light Mode" class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">
+                        <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="theme-icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </button>
+
+                    <button onclick="openConfigModal()" title="Configure Google OAuth Client ID" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-xl transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
 
-                    <!-- Signed Out View -->
                     <div id="auth-signed-out" class="flex items-center space-x-2">
-                        <button onclick="openLoginModal()" class="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl shadow-sm text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                        <button onclick="openLoginModal()" class="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 rounded-xl shadow-sm text-xs font-semibold text-slate-700 dark:text-slate-200 transition">
                             <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                            <span>Sign in</span>
+                            <span class="hidden sm:inline">Sign in</span>
                         </button>
                     </div>
 
-                    <!-- Signed In View -->
-                    <div id="auth-signed-in" class="hidden flex items-center space-x-3">
+                    <div id="auth-signed-in" class="hidden flex items-center space-x-2 sm:space-x-3">
                         <img id="user-avatar" src="https://placehold.co/80x80/10b981/ffffff?text=U" alt="User Profile" class="w-8 h-8 rounded-full border-2 border-emerald-500 object-cover shadow-sm">
                         <div class="hidden sm:block text-left">
-                            <div id="user-name" class="text-xs font-bold text-slate-800 leading-none">Keerthan User</div>
-                            <div id="user-email" class="text-[10px] text-slate-400 truncate max-w-[120px]">user@google.com</div>
+                            <div id="user-name" class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-none">User Account</div>
+                            <div id="user-email" class="text-[10px] text-slate-400 truncate max-w-[110px]">user@google.com</div>
                         </div>
-                        <button onclick="handleSignOut()" title="Sign Out" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <button onclick="handleSignOut()" title="Sign Out" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-slate-800 rounded-xl transition">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         </button>
                     </div>
@@ -133,236 +232,294 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
 
-        <!-- 1. DASHBOARD TAB VIEW -->
+        <!-- 1. DASHBOARD VIEW -->
         <section id="tab-dashboard" class="tab-content space-y-6">
-            <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/10 relative overflow-hidden">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/10 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/30 border border-emerald-300/30 text-xs font-semibold text-emerald-100 mb-3">
                         <span id="login-status-badge">● Guest Mode (Local Storage)</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold mb-2" id="welcome-title">Welcome to PulseHealth!</h1>
-                    <p class="text-emerald-100 text-sm sm:text-base mb-6">Track your fitness, nutrition, hydration, and walking steps with secure Google login synchronization.</p>
+                    <h1 class="text-2xl sm:text-3xl font-black mb-2" id="welcome-title">Welcome to PulseHealth!</h1>
+                    <p class="text-emerald-100 text-sm sm:text-base mb-6">Master your 30-Day Fitness Target with 3 days of exercise & 1 day rest, animated human figure demonstrations, and complete health tracking.</p>
                     <div class="flex flex-wrap gap-3">
-                        <button onclick="switchTab('exercises')" class="px-5 py-2.5 bg-white text-emerald-800 rounded-xl font-semibold text-sm hover:bg-emerald-50 transition shadow-md">Start Exercise Routine</button>
-                        <button onclick="openLoginModal()" id="hero-auth-btn" class="px-5 py-2.5 bg-emerald-700/50 hover:bg-emerald-700/70 border border-emerald-400/30 text-white rounded-xl font-semibold text-sm transition">Connect Google Account</button>
+                        <button onclick="switchTab('target30')" class="px-5 py-2.5 bg-white text-emerald-800 rounded-xl font-bold text-sm hover:bg-emerald-50 transition shadow-md">🎯 Open 30-Day Challenge</button>
+                        <button onclick="switchTab('exercises')" class="px-5 py-2.5 bg-emerald-800/60 hover:bg-emerald-800/80 border border-emerald-400/30 text-white rounded-xl font-bold text-sm transition">Browse All Exercises</button>
                     </div>
                 </div>
                 <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
             </div>
 
-            <!-- Daily Overview Metrics Grid -->
+            <!-- 30-Day Challenge Progress Quick View -->
+            <div class="glass-card p-6 rounded-3xl space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 flex items-center justify-center text-2xl font-bold">
+                            🏆
+                        </div>
+                        <div>
+                            <h3 class="font-black text-lg text-slate-800 dark:text-slate-100">30-Day Challenge Status</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Structured as 3 Days Workout + 1 Day Rest Cycle</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Current Target Day</span>
+                        <span class="text-2xl font-black text-indigo-600 dark:text-indigo-400" id="dash-current-day-text">Day 1 / 30</span>
+                    </div>
+                </div>
+
+                <div class="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
+                    <div id="dash-target30-bar" class="bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: 3.33%"></div>
+                </div>
+            </div>
+
+            <!-- Dashboard Health Metrics -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Water Card -->
                 <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('water')">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 1.293a1 1 0 011.414 0l6.364 6.364a9 9 0 11-12.728 0L7.293 1.293zm0 2.828L2.929 8.485a7 7 0 109.9 0L7.293 4.121z" clip-rule="evenodd"></path></svg>
-                        </div>
-                        <span class="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full">Target: 2500 ml</span>
+                        <div class="p-3 bg-blue-500/10 text-blue-500 rounded-xl">💧</div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-blue-500/10 text-blue-500 rounded-full">Target: 2500 ml</span>
                     </div>
-                    <div class="text-2xl font-bold text-slate-800" id="dash-water-text">0 / 2500 ml</div>
-                    <p class="text-xs text-slate-500 mt-1">Water Hydration</p>
-                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                    <div class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dash-water-text">0 / 2500 ml</div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Water Hydration</p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
                         <div id="dash-water-bar" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <!-- Steps Card -->
                 <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('walking')">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        </div>
-                        <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full">Target: 10,000</span>
+                        <div class="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">👟</div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-full">Target: 10,000</span>
                     </div>
-                    <div class="text-2xl font-bold text-slate-800" id="dash-steps-text">0 / 10000</div>
-                    <p class="text-xs text-slate-500 mt-1">Daily Steps</p>
-                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                    <div class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dash-steps-text">0 / 10000</div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Daily Steps</p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
                         <div id="dash-steps-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <!-- Calories Consumed -->
                 <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('diet')">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path></svg>
-                        </div>
-                        <span class="text-xs font-semibold px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full">Target: 2000 kcal</span>
+                        <div class="p-3 bg-orange-500/10 text-orange-500 rounded-xl">🥗</div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-orange-500/10 text-orange-500 rounded-full">Target: 2000 kcal</span>
                     </div>
-                    <div class="text-2xl font-bold text-slate-800" id="dash-calories-text">0 / 2000 kcal</div>
-                    <p class="text-xs text-slate-500 mt-1">Calories Consumed</p>
-                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                    <div class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dash-calories-text">0 / 2000 kcal</div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Balanced Diet Intake</p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
                         <div id="dash-calories-bar" class="bg-orange-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <!-- Workouts Done -->
                 <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('exercises')">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        </div>
-                        <span class="text-xs font-semibold px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">Goal: 1 Workout</span>
+                        <div class="p-3 bg-purple-500/10 text-purple-500 rounded-xl">🏋️‍♂️</div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-purple-500/10 text-purple-500 rounded-full">Workouts</span>
                     </div>
-                    <div class="text-2xl font-bold text-slate-800" id="dash-workout-text">0 Completed</div>
-                    <p class="text-xs text-slate-500 mt-1">Exercises Completed</p>
-                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                    <div class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dash-workout-text">0 Completed</div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Routines Completed</p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
                         <div id="dash-workout-bar" class="bg-purple-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 2. EXERCISES TAB VIEW -->
+        <!-- 2. 30-DAY TARGET CHALLENGE VIEW -->
+        <section id="tab-target30" class="tab-content hidden space-y-6">
+            <div class="glass-card p-6 rounded-3xl space-y-4 border border-indigo-500/30">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold px-3 py-1 bg-indigo-500/10 text-indigo-500 rounded-full uppercase">30-Day Goal Program</span>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 mt-1">3 Days Exercise + 1 Day Rest Program</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Scientific muscle recovery loop: 3 consecutive days of targeted fitness workouts followed by 1 day of recovery.</p>
+                    </div>
+                    <button onclick="reset30DayChallenge()" class="px-3 py-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 text-xs font-bold rounded-xl transition">Reset 30-Day Progress</button>
+                </div>
+
+                <!-- Day Selector Calendar Grid (Day 1 to Day 30) -->
+                <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2 pt-2" id="grid-30day-container">
+                    <!-- Day Pills Injected via JS -->
+                </div>
+            </div>
+
+            <!-- Active Day Target Details Card -->
+            <div id="day-detail-card" class="glass-card p-6 rounded-3xl space-y-6">
+                <!-- Day Details Injected via JS -->
+            </div>
+        </section>
+
+        <!-- 3. EXERCISES TAB VIEW WITH REALISTIC ANIMATED PERSON -->
         <section id="tab-exercises" class="tab-content hidden space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800">Exercises & Workouts</h2>
-                    <p class="text-slate-500 text-sm">Choose a workout routine to keep your body active and fit.</p>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Healthy Exercise Library</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Follow realistic animated human guides for cardio, strength, core, and flexibility.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button onclick="filterExercises('all')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-sm" data-category="all">All</button>
-                    <button onclick="filterExercises('cardio')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="cardio">Cardio</button>
-                    <button onclick="filterExercises('strength')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="strength">Strength</button>
-                    <button onclick="filterExercises('flexibility')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="flexibility">Flexibility</button>
+                    <button onclick="filterExercises('all')" class="ex-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-sm" data-category="all">All</button>
+                    <button onclick="filterExercises('cardio')" class="ex-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold sub-card text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50" data-category="cardio">Cardio</button>
+                    <button onclick="filterExercises('strength')" class="ex-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold sub-card text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50" data-category="strength">Strength</button>
+                    <button onclick="filterExercises('core')" class="ex-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold sub-card text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50" data-category="core">Core</button>
+                    <button onclick="filterExercises('flexibility')" class="ex-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold sub-card text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50" data-category="flexibility">Flexibility</button>
                 </div>
             </div>
+
+            <!-- Active Exercise Animated Player -->
+            <div id="active-workout-player" class="glass-card p-6 rounded-3xl hidden space-y-4 border-2 border-emerald-500/40">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-full uppercase">Active Routine</span>
+                        <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 mt-1" id="active-ex-title">Jumping Jacks</h3>
+                    </div>
+                    <button onclick="stopActiveWorkout()" class="text-xs font-bold px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-xl transition">End Workout</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- Illustrated Animated Figure Box -->
+                    <div class="sub-card rounded-2xl p-6 flex flex-col items-center justify-center min-h-[260px] relative border border-slate-200 dark:border-slate-800">
+                        <div id="animated-figure-container" class="w-56 h-56 flex items-center justify-center">
+                            <!-- Injected Animated Figure -->
+                        </div>
+                        <span class="text-xs font-semibold text-slate-400 mt-2">Follow Human Figure Motion</span>
+                    </div>
+
+                    <!-- Timer & Actions -->
+                    <div class="space-y-4 text-center md:text-left">
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 uppercase">Timer Remaining</div>
+                            <div class="text-5xl font-black text-emerald-600 dark:text-emerald-400 font-mono" id="ex-timer-display">00:45</div>
+                        </div>
+                        <div class="flex justify-center md:justify-start gap-3">
+                            <button onclick="pauseWorkoutTimer()" id="pause-timer-btn" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-700 font-bold text-xs rounded-xl hover:opacity-90">Pause</button>
+                            <button onclick="finishWorkoutTimer()" class="px-5 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20">Mark Completed (+🔥)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="exercise-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- 3. BALANCED DIET TAB VIEW -->
+        <!-- 4. DIET TAB VIEW -->
         <section id="tab-diet" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Macro Summary -->
-                <div class="glass-card p-6 rounded-2xl space-y-6">
-                    <h3 class="text-lg font-bold text-slate-800">Daily Macro Intake</h3>
+                <div class="glass-card p-6 rounded-3xl space-y-6">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Balanced Macro Intake</h3>
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-amber-700">Carbohydrates (50%)</span>
+                                <span class="text-amber-600 dark:text-amber-400">Carbohydrates (50%)</span>
                                 <span id="macro-carbs-text">0 / 250g</span>
                             </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
                                 <div id="macro-carbs-bar" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-rose-700">Protein (30%)</span>
+                                <span class="text-rose-600 dark:text-rose-400">Protein (30%)</span>
                                 <span id="macro-protein-text">0 / 150g</span>
                             </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
                                 <div id="macro-protein-bar" class="bg-rose-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs font-semibold mb-1">
-                                <span class="text-emerald-700">Healthy Fats (20%)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400">Healthy Fats (20%)</span>
                                 <span id="macro-fat-text">0 / 65g</span>
                             </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
                                 <div id="macro-fat-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
-                        <span class="text-xs font-semibold text-emerald-800 block">Total Consumed</span>
-                        <span class="text-3xl font-extrabold text-emerald-900" id="diet-total-calories">0</span>
-                        <span class="text-xs text-emerald-600"> / 2000 kcal Target</span>
+                    <div class="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-center">
+                        <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 block">Total Consumed</span>
+                        <span class="text-3xl font-extrabold text-emerald-700 dark:text-emerald-300" id="diet-total-calories">0</span>
+                        <span class="text-xs text-emerald-600/80 dark:text-emerald-400/80"> / 2000 kcal Target</span>
                     </div>
                 </div>
 
-                <!-- Meal Plan & Logs -->
-                <div class="glass-card p-6 rounded-2xl lg:col-span-2 space-y-6">
-                    <h3 class="text-lg font-bold text-slate-800">Meal Plan Log</h3>
+                <div class="glass-card p-6 rounded-3xl lg:col-span-2 space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Meal Planner</h3>
+                        <button onclick="logQuickMeal()" class="px-3 py-1.5 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition">+ Log Quick Meal</button>
+                    </div>
+
                     <div id="breakfast-section" class="space-y-2">
-                        <h4 class="font-bold text-slate-700 text-sm">🍳 Breakfast</h4>
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm">🍳 Breakfast</h4>
                         <div id="breakfast-list" class="space-y-2"></div>
                     </div>
                     <div id="lunch-section" class="space-y-2">
-                        <h4 class="font-bold text-slate-700 text-sm">🥗 Lunch</h4>
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm">🥗 Lunch</h4>
                         <div id="lunch-list" class="space-y-2"></div>
                     </div>
                     <div id="dinner-section" class="space-y-2">
-                        <h4 class="font-bold text-slate-700 text-sm">🍲 Dinner</h4>
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm">🍲 Dinner</h4>
                         <div id="dinner-list" class="space-y-2"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 4. WATER TRACKER TAB VIEW -->
+        <!-- 5. WATER TRACKER TAB VIEW -->
         <section id="tab-water" class="tab-content hidden space-y-6">
             <div class="max-w-2xl mx-auto glass-card p-8 rounded-3xl text-center space-y-6 flex flex-col items-center">
-                <div class="relative w-36 h-52 border-4 border-blue-400/80 rounded-b-3xl rounded-t-lg overflow-hidden bg-blue-50/30 shadow-inner">
+                <div class="relative w-36 h-52 border-4 border-blue-400/80 rounded-b-3xl rounded-t-lg overflow-hidden sub-card shadow-inner">
                     <div id="water-fill" class="water-wave absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-600 to-cyan-400 opacity-90 w-full" style="height: 0%;"></div>
-                    <div class="absolute inset-0 flex items-center justify-center font-extrabold text-2xl text-slate-700 mix-blend-multiply" id="water-percent-text">0%</div>
+                    <div class="absolute inset-0 flex items-center justify-center font-extrabold text-2xl text-slate-700 dark:text-slate-200" id="water-percent-text">0%</div>
                 </div>
                 <div>
-                    <div class="text-4xl font-extrabold text-slate-800" id="water-current-text">0 ml</div>
-                    <div class="text-sm font-semibold text-slate-500 mt-1">Goal: 2500 ml</div>
+                    <div class="text-4xl font-extrabold text-slate-800 dark:text-slate-100" id="water-current-text">0 ml</div>
+                    <div class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Goal: 2500 ml</div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="addWater(250)" class="py-2.5 px-5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-sm rounded-xl border border-blue-200 transition">+250 ml</button>
-                    <button onclick="addWater(500)" class="py-2.5 px-5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-sm rounded-xl border border-blue-200 transition">+500 ml</button>
+                    <button onclick="addWater(250)" class="py-2.5 px-5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-sm rounded-xl border border-blue-500/20 transition">+250 ml</button>
+                    <button onclick="addWater(500)" class="py-2.5 px-5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-sm rounded-xl border border-blue-500/20 transition">+500 ml</button>
                 </div>
             </div>
         </section>
 
-        <!-- 5. WALKING TRACKER TAB VIEW -->
+        <!-- 6. WALKING TRACKER TAB VIEW -->
         <section id="tab-walking" class="tab-content hidden space-y-6">
             <div class="max-w-2xl mx-auto glass-card p-8 rounded-3xl text-center space-y-6">
-                <div class="text-5xl font-extrabold text-slate-800" id="walking-steps-text">0</div>
-                <p class="text-sm font-semibold text-slate-500">Daily Goal: 10,000 Steps</p>
-                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div class="text-5xl font-extrabold text-slate-800 dark:text-slate-100" id="walking-steps-text">0</div>
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Daily Goal: 10,000 Steps</p>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
                     <div id="walking-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 p-4 rounded-xl">
+                    <div class="sub-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <span class="text-xs text-slate-400 font-semibold block">Distance</span>
-                        <span class="text-xl font-bold text-slate-700" id="walking-distance-text">0.0 km</span>
+                        <span class="text-xl font-bold text-slate-700 dark:text-slate-200" id="walking-distance-text">0.0 km</span>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-xl">
+                    <div class="sub-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <span class="text-xs text-slate-400 font-semibold block">Est. Burned</span>
-                        <span class="text-xl font-bold text-slate-700" id="walking-calories-text">0 kcal</span>
+                        <span class="text-xl font-bold text-slate-700 dark:text-slate-200" id="walking-calories-text">0 kcal</span>
                     </div>
                 </div>
                 <div class="flex justify-center gap-3">
-                    <button onclick="addSteps(1000)" class="py-2 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-xl border border-emerald-200 transition">+1,000 Steps</button>
-                    <button onclick="addSteps(2500)" class="py-2 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-xl border border-emerald-200 transition">+2,500 Steps</button>
+                    <button onclick="addSteps(1000)" class="py-2 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs rounded-xl border border-emerald-500/20 transition">+1,000 Steps</button>
+                    <button onclick="addSteps(2500)" class="py-2 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs rounded-xl border border-emerald-500/20 transition">+2,500 Steps</button>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- GOOGLE LOGIN MODAL -->
+    <!-- LOGIN MODAL -->
     <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl relative border border-slate-100 text-center">
+        <div class="modal-card rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl relative border border-slate-200 dark:border-slate-800 text-center">
             <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-
             <div class="space-y-2">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457-.336-2.836-.937-4.065"></path></svg>
-                </div>
-                <h3 class="text-xl font-extrabold text-slate-800">Sign in to PulseHealth</h3>
-                <p class="text-xs text-slate-500">Sync your daily fitness progress across devices securely with Google.</p>
+                <h3 class="text-xl font-extrabold text-slate-800 dark:text-slate-100">Sign in to PulseHealth</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Save and sync your 30-Day streak & progress.</p>
             </div>
-
-            <!-- Google GSI Official Render Button -->
             <div id="google-gsi-button-container" class="flex justify-center min-h-[44px]"></div>
-
-            <div class="relative flex py-1 items-center">
-                <div class="flex-grow border-t border-slate-200"></div>
-                <span class="flex-shrink mx-3 text-slate-400 text-[10px] font-bold uppercase tracking-wider">or test mode</span>
-                <div class="flex-grow border-t border-slate-200"></div>
-            </div>
-
-            <!-- Simulated Login Fallback -->
-            <button onclick="simulateGoogleLogin()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+            <button onclick="simulateGoogleLogin()" class="w-full py-2.5 sub-card hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl transition">
                 🚀 Simulate Local Test Account Login
             </button>
         </div>
@@ -370,41 +527,33 @@
 
     <!-- OAUTH CLIENT ID CONFIG MODAL -->
     <div id="config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-slate-100">
+        <div class="modal-card rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-slate-200 dark:border-slate-800">
             <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-
             <div>
-                <h3 class="text-lg font-bold text-slate-800">Google OAuth 2.0 Settings</h3>
-                <p class="text-xs text-slate-500 mt-1">Configure your official Google OAuth Client ID for production Google Identity Services.</p>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Google OAuth 2.0 Credentials</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Provide your Google Cloud Client ID for production Sign-In.</p>
             </div>
-
-            <div class="space-y-3">
-                <label class="text-xs font-semibold text-slate-700 block">Google Client ID</label>
-                <input type="text" id="client-id-input" placeholder="YOUR_CLIENT_ID.apps.googleusercontent.com" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-mono">
-                <p class="text-[10px] text-slate-400">Created in Google Cloud Console under APIs & Services > Credentials.</p>
-            </div>
-
+            <input type="text" id="client-id-input" placeholder="YOUR_CLIENT_ID.apps.googleusercontent.com" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 sub-card rounded-xl outline-none font-mono">
             <div class="flex gap-2">
-                <button onclick="saveClientID()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition">Save & Initialize</button>
-                <button onclick="closeConfigModal()" class="py-2.5 px-4 bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl transition">Cancel</button>
+                <button onclick="saveClientID()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition">Save Client ID</button>
+                <button onclick="closeConfigModal()" class="py-2.5 px-4 sub-card text-slate-600 dark:text-slate-300 font-semibold text-xs rounded-xl transition">Cancel</button>
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white/80 backdrop-blur-md border-t border-emerald-100 py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+    <footer class="header-blur border-t border-emerald-100 dark:border-slate-800 py-6 mt-12 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>&copy; 2026 Keerthan Kamboja. All Rights Reserved.</p>
-            <p class="font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                Developed by <span class="font-bold text-emerald-900">Keerthan Kamboja</span>
+            <p class="font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                Developed by <span class="font-bold text-emerald-700 dark:text-emerald-300">Keerthan Kamboja</span>
             </p>
         </div>
     </footer>
 
     <script>
-        // Key protection script
         function handleKeyProtection(e) {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'u' || e.key === 's')) {
                 return false;
@@ -412,147 +561,402 @@
             return true;
         }
 
-        // Global State
         let currentUser = null;
         let googleClientID = localStorage.getItem('pulse_google_client_id') || '';
+        let timerInterval = null;
+        let currentTimerSeconds = 0;
+        let isTimerPaused = false;
+        let selectedChallengeDay = 1;
 
-        const defaultExercises = [
-            { id: 1, title: 'Jumping Jacks', category: 'cardio', duration: '5 Mins', calories: '40 kcal', desc: 'Boost heart rate and burn calories quickly.' },
-            { id: 2, title: 'Push-Ups & Core', category: 'strength', duration: '10 Mins', calories: '75 kcal', desc: 'Strengthen chest, shoulders, and triceps.' },
-            { id: 3, title: 'Morning Stretch', category: 'flexibility', duration: '8 Mins', calories: '25 kcal', desc: 'Enhance mobility and release muscle tension.' }
+        // Comprehensive Health Exercises Database
+        const allExercisesDatabase = [
+            { id: 1, title: 'Jumping Jacks', category: 'cardio', duration: 45, calories: '45 kcal', desc: 'Full-body cardio exercise to burn fat & elevate heart rate.', figureType: 'personJack' },
+            { id: 2, title: 'Bodyweight Squats', category: 'strength', duration: 60, calories: '60 kcal', desc: 'Strengthen quadriceps, hamstrings, and glutes.', figureType: 'personSquat' },
+            { id: 3, title: 'Push-Ups Routine', category: 'strength', duration: 45, calories: '75 kcal', desc: 'Build chest, shoulders, triceps, and core stability.', figureType: 'personPushup' },
+            { id: 4, title: 'High Knees Sprint', category: 'cardio', duration: 30, calories: '50 kcal', desc: 'Intense lower-body & cardiovascular workout.', figureType: 'personHighKnees' },
+            { id: 5, title: 'Plank Core Hold', category: 'core', duration: 60, calories: '40 kcal', desc: 'Isometric core hold to tone abdominal muscles.', figureType: 'personPushup' },
+            { id: 6, title: 'Yoga Stretch & Release', category: 'flexibility', duration: 90, calories: '30 kcal', desc: 'Relieve spinal muscle stiffness and improve mobility.', figureType: 'personStretch' },
+            { id: 7, title: 'Mindful Meditation Rest', category: 'flexibility', duration: 180, calories: '15 kcal', desc: 'Calming breathing routine to accelerate recovery on rest days.', figureType: 'personMeditate' }
         ];
+
+        const defaultMeals = {
+            breakfast: [{ name: 'Sprouted Grain Toast & Eggs', calories: 350 }],
+            lunch: [{ name: 'Grilled Chicken Salad & Quinoa', calories: 550 }],
+            dinner: [{ name: 'Steamed Salmon & Veggies', calories: 450 }]
+        };
 
         let state = {
             water: 0,
             steps: 0,
             workoutsCompleted: 0,
-            caloriesConsumed: 0
+            mealsLogged: 0,
+            caloriesConsumed: 1350,
+            streakDays: 0,
+            completedDays30: [], // Array of completed day numbers [1, 2, ...]
+            currentChallengeDay: 1
         };
 
-        // Initialize App on Load
         window.onload = function() {
-            loadSavedClientID();
+            initTheme();
             loadUserData();
+            render30DayChallengeGrid();
             renderExercises('all');
+            renderMeals();
             updateUI();
-            initGoogleIdentity();
         };
 
-        // Tab Switcher
+        function initTheme() {
+            const savedTheme = localStorage.getItem('pulse_theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon-sun').classList.remove('hidden');
+                document.getElementById('theme-icon-moon').classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-icon-sun').classList.add('hidden');
+                document.getElementById('theme-icon-moon').classList.remove('hidden');
+            }
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('pulse_theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon-sun').classList.toggle('hidden', !isDark);
+            document.getElementById('theme-icon-moon').classList.toggle('hidden', isDark);
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-50', 'text-emerald-700');
-                btn.classList.add('text-slate-600');
+                btn.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-600');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
             });
             const activeNav = document.getElementById(`nav-${tabId}`);
             if (activeNav) {
-                activeNav.classList.add('bg-emerald-50', 'text-emerald-700');
+                activeNav.classList.add('bg-emerald-50', 'dark:bg-emerald-950/40', 'text-emerald-600');
             }
         }
 
-        // Google Identity Services (GSI) Integration
-        function initGoogleIdentity() {
-            if (typeof google !== 'undefined' && google.accounts && googleClientID) {
-                try {
-                    google.accounts.id.initialize({
-                        client_id: googleClientID,
-                        callback: handleGoogleCredentialResponse
-                    });
-                    
-                    const container = document.getElementById('google-gsi-button-container');
-                    if (container) {
-                        google.accounts.id.renderButton(container, {
-                            theme: 'outline',
-                            size: 'medium',
-                            shape: 'pill'
-                        });
-                    }
-                } catch (err) {
-                    console.log('GSI Initialization pending valid Client ID');
+        // 30-DAY CHALLENGE LOGIC (3 DAYS EXERCISE + 1 DAY REST)
+        function isRestDay(dayNum) {
+            return dayNum % 4 === 0; // Days 4, 8, 12, 16, 20, 24, 28 are REST DAYS
+        }
+
+        function render30DayChallengeGrid() {
+            const grid = document.getElementById('grid-30day-container');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 30; i++) {
+                const rest = isRestDay(i);
+                const isCompleted = state.completedDays30.includes(i);
+                const isCurrent = i === state.currentChallengeDay;
+
+                const pill = document.createElement('button');
+                pill.onclick = () => selectChallengeDay(i);
+                pill.className = `p-2.5 rounded-2xl flex flex-col items-center justify-center border text-xs font-bold transition ${
+                    isCompleted ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400' :
+                    isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-400/50' :
+                    rest ? 'sub-card border-amber-500/30 text-amber-600 dark:text-amber-400' :
+                    'sub-card border-slate-200 dark:border-slate-800 text-slate-500'
+                }`;
+
+                pill.innerHTML = `
+                    <span class="text-[10px] opacity-80">Day ${i}</span>
+                    <span class="text-sm mt-0.5">${isCompleted ? '✅' : rest ? '💤' : '🏋️'}</span>
+                `;
+                grid.appendChild(pill);
+            }
+
+            selectChallengeDay(state.currentChallengeDay);
+        }
+
+        function selectChallengeDay(dayNum) {
+            selectedChallengeDay = dayNum;
+            const rest = isRestDay(dayNum);
+            const completed = state.completedDays30.includes(dayNum);
+            const container = document.getElementById('day-detail-card');
+
+            if (rest) {
+                container.innerHTML = `
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="space-y-2 max-w-xl">
+                            <span class="text-xs font-bold px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full uppercase">Day ${dayNum} • Official Rest & Muscle Recovery</span>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-slate-100">Rest & Active Recovery Day</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Rest days are essential for muscle fiber repair, hydration replenishment, and preventing fatigue. Perform light stretching or mindfulness meditation today!</p>
+                            
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <div class="sub-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">💧 Hydration Target</span>
+                                    <span class="text-slate-400">Drink 2,500 ml water today</span>
+                                </div>
+                                <div class="sub-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">🧘 Light Stretch</span>
+                                    <span class="text-slate-400">5-10 Mins yoga or walking</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center space-y-3">
+                            <div class="w-32 h-32 sub-card rounded-2xl flex items-center justify-center border border-amber-500/20">
+                                ${getRealisticHumanSVG('personMeditate')}
+                            </div>
+                            <button onclick="completeDayTarget(${dayNum})" ${completed ? 'disabled' : ''} class="w-full py-2.5 ${completed ? 'bg-emerald-500 text-white cursor-default' : 'bg-amber-500 hover:bg-amber-600 text-white'} text-xs font-bold rounded-xl transition">
+                                ${completed ? '✓ Day Recovery Completed' : 'Complete Rest Day Target'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Workout Day
+                const dayWorkoutIndex = (dayNum % 3) || 3;
+                const workoutTitle = dayWorkoutIndex === 1 ? 'Full-Body Cardio & Legs' : dayWorkoutIndex === 2 ? 'Upper Body Strength & Core' : 'Flexibility & Stamina';
+
+                container.innerHTML = `
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="space-y-2 max-w-xl">
+                            <span class="text-xs font-bold px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full uppercase">Day ${dayNum} • Active Workout Routine</span>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-slate-100">${workoutTitle}</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Complete the routine exercises below with animated human figure guides to stay on track for your 30-day target!</p>
+                            
+                            <div class="flex gap-2 pt-2">
+                                <button onclick="startAnimatedWorkout(1)" class="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition">▶ Start Routine</button>
+                                <button onclick="completeDayTarget(${dayNum})" ${completed ? 'disabled' : ''} class="px-4 py-2 ${completed ? 'bg-emerald-500 text-white' : 'sub-card text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700'} text-xs font-bold rounded-xl transition">
+                                    ${completed ? '✅ Day ${dayNum} Completed' : 'Mark Day ${dayNum} Done'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="w-36 h-36 sub-card rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                            ${getRealisticHumanSVG(dayWorkoutIndex === 1 ? 'personJack' : dayWorkoutIndex === 2 ? 'personPushup' : 'personSquat')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function completeDayTarget(dayNum) {
+            if (!state.completedDays30.includes(dayNum)) {
+                state.completedDays30.push(dayNum);
+                if (state.currentChallengeDay === dayNum && dayNum < 30) {
+                    state.currentChallengeDay += 1;
                 }
+                state.streakDays += 1;
+                saveUserData();
+                render30DayChallengeGrid();
+                updateUI();
             }
         }
 
-        // Parse JWT Google Token
-        function parseJwt(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                return null;
+        function reset30DayChallenge() {
+            state.completedDays30 = [];
+            state.currentChallengeDay = 1;
+            saveUserData();
+            render30DayChallengeGrid();
+            updateUI();
+        }
+
+        // REALISTIC ANIMATED HUMAN FIGURE SVGs (Detailed head, torso, limbs, shoes)
+        function getRealisticHumanSVG(type) {
+            if (type === 'personJack') {
+                return `
+                <svg viewBox="0 0 100 120" class="w-36 h-36">
+                    <!-- Shadow -->
+                    <ellipse cx="50" cy="112" rx="20" ry="4" fill="rgba(0,0,0,0.15)"/>
+                    
+                    <!-- Left Leg -->
+                    <g class="anim-person-leg-l">
+                        <rect x="42" y="68" width="7" height="22" rx="3" fill="#1e293b"/>
+                        <rect x="41" y="88" width="6" height="20" rx="2" fill="#334155"/>
+                        <path d="M 38 106 L 47 106 L 47 110 L 36 110 Z" fill="#10b981"/>
+                    </g>
+                    <!-- Right Leg -->
+                    <g class="anim-person-leg-r">
+                        <rect x="51" y="68" width="7" height="22" rx="3" fill="#1e293b"/>
+                        <rect x="53" y="88" width="6" height="20" rx="2" fill="#334155"/>
+                        <path d="M 53 106 L 62 106 L 64 110 L 53 110 Z" fill="#10b981"/>
+                    </g>
+
+                    <!-- Torso with Shirt -->
+                    <path d="M 38 38 L 62 38 L 58 70 L 42 70 Z" fill="#059669" rx="4"/>
+                    
+                    <!-- Head & Hair -->
+                    <circle cx="50" cy="22" r="10" fill="#f87171"/>
+                    <path d="M 41 18 Q 50 10 59 18 Q 50 14 41 18 Z" fill="#0f172a"/>
+
+                    <!-- Left Arm -->
+                    <g class="anim-person-arm-l">
+                        <rect x="30" y="38" width="10" height="18" rx="4" fill="#059669"/>
+                        <rect x="28" y="54" width="7" height="18" rx="3" fill="#f87171"/>
+                    </g>
+                    <!-- Right Arm -->
+                    <g class="anim-person-arm-r">
+                        <rect x="60" y="38" width="10" height="18" rx="4" fill="#059669"/>
+                        <rect x="65" y="54" width="7" height="18" rx="3" fill="#f87171"/>
+                    </g>
+                </svg>`;
+            } else if (type === 'personSquat') {
+                return `
+                <svg viewBox="0 0 100 120" class="w-36 h-36">
+                    <ellipse cx="50" cy="112" rx="24" ry="4" fill="rgba(0,0,0,0.15)"/>
+                    <g class="anim-person-squat-torso">
+                        <circle cx="50" cy="20" r="10" fill="#f87171"/>
+                        <path d="M 41 16 Q 50 8 59 16 Z" fill="#0f172a"/>
+                        <path d="M 38 32 L 62 32 L 58 62 L 42 62 Z" fill="#4f46e5"/>
+                        <!-- Arms Forward -->
+                        <rect x="58" y="36" width="28" height="7" rx="3" fill="#f87171"/>
+                    </g>
+                    <g class="anim-person-squat-legs">
+                        <rect x="40" y="62" width="8" height="24" rx="3" fill="#1e293b"/>
+                        <rect x="52" y="62" width="8" height="24" rx="3" fill="#1e293b"/>
+                        <rect x="38" y="84" width="8" height="24" rx="3" fill="#334155"/>
+                        <rect x="54" y="84" width="8" height="24" rx="3" fill="#334155"/>
+                        <path d="M 34 106 L 46 106 L 46 110 L 34 110 Z" fill="#10b981"/>
+                        <path d="M 54 106 L 66 106 L 66 110 L 54 110 Z" fill="#10b981"/>
+                    </g>
+                </svg>`;
+            } else if (type === 'personPushup') {
+                return `
+                <svg viewBox="0 0 120 100" class="w-40 h-40">
+                    <ellipse cx="60" cy="88" rx="40" ry="4" fill="rgba(0,0,0,0.15)"/>
+                    <g class="anim-person-pushup">
+                        <circle cx="102" cy="40" r="9" fill="#f87171"/>
+                        <path d="M 95 38 L 25 55 L 25 68 L 92 52 Z" fill="#059669"/>
+                        <rect x="15" y="58" width="16" height="6" rx="2" fill="#10b981"/>
+                        <rect x="80" y="50" width="7" height="28" rx="3" fill="#f87171"/>
+                    </g>
+                </svg>`;
+            } else {
+                // Meditation / Rest Pose
+                return `
+                <svg viewBox="0 0 100 120" class="w-36 h-36">
+                    <ellipse cx="50" cy="100" rx="28" ry="6" fill="rgba(0,0,0,0.15)"/>
+                    <g class="anim-person-meditate">
+                        <circle cx="50" cy="35" r="10" fill="#f87171"/>
+                        <path d="M 38 48 L 62 48 L 58 78 L 42 78 Z" fill="#d97706"/>
+                        <!-- Legs Crossed -->
+                        <path d="M 26 88 C 40 100, 60 100, 74 88 C 65 78, 35 78, 26 88 Z" fill="#1e293b"/>
+                        <circle cx="28" cy="72" r="5" fill="#f87171"/>
+                        <circle cx="72" cy="72" r="5" fill="#f87171"/>
+                    </g>
+                </svg>`;
             }
         }
 
-        function handleGoogleCredentialResponse(response) {
-            const payload = parseJwt(response.credential);
-            if (payload) {
-                currentUser = {
-                    name: payload.name || 'Google User',
-                    email: payload.email,
-                    picture: payload.picture
-                };
-                onUserAuthenticated();
-            }
+        function startAnimatedWorkout(exId) {
+            const ex = allExercisesDatabase.find(item => item.id === exId) || allExercisesDatabase[0];
+            document.getElementById('active-workout-player').classList.remove('hidden');
+            document.getElementById('active-ex-title').innerText = ex.title;
+            document.getElementById('animated-figure-container').innerHTML = getRealisticHumanSVG(ex.figureType);
+
+            currentTimerSeconds = ex.duration;
+            isTimerPaused = false;
+            document.getElementById('pause-timer-btn').innerText = 'Pause';
+            updateTimerDisplay();
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!isTimerPaused) {
+                    currentTimerSeconds--;
+                    updateTimerDisplay();
+                    if (currentTimerSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        finishWorkoutTimer();
+                    }
+                }
+            }, 1000);
         }
 
-        function simulateGoogleLogin() {
-            currentUser = {
-                name: 'Keerthan Kamboja',
-                email: 'keerthan.dev@gmail.com',
-                picture: 'https://placehold.co/80x80/10b981/ffffff?text=KK'
+        function updateTimerDisplay() {
+            const mins = Math.floor(currentTimerSeconds / 60);
+            const secs = currentTimerSeconds % 60;
+            document.getElementById('ex-timer-display').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function pauseWorkoutTimer() {
+            isTimerPaused = !isTimerPaused;
+            document.getElementById('pause-timer-btn').innerText = isTimerPaused ? 'Resume' : 'Pause';
+        }
+
+        function stopActiveWorkout() {
+            clearInterval(timerInterval);
+            document.getElementById('active-workout-player').classList.add('hidden');
+        }
+
+        function finishWorkoutTimer() {
+            stopActiveWorkout();
+            state.workoutsCompleted += 1;
+            completeDayTarget(selectedChallengeDay);
+            saveUserData();
+            updateUI();
+        }
+
+        function renderExercises(filter) {
+            const container = document.getElementById('exercise-cards-container');
+            container.innerHTML = '';
+            allExercisesDatabase.forEach(ex => {
+                if (filter === 'all' || ex.category === filter) {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card p-5 rounded-3xl space-y-3 border border-slate-200 dark:border-slate-800';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-full uppercase">${ex.category}</span>
+                            <span class="text-xs font-semibold text-slate-400">⏱️ ${ex.duration}s</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">${ex.title}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">${ex.desc}</p>
+                        <button onclick="startAnimatedWorkout(${ex.id})" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-emerald-600/20">▶ Start Routine</button>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        function filterExercises(cat) {
+            document.querySelectorAll('.ex-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('sub-card', 'text-slate-600', 'dark:text-slate-300');
+            });
+            event.target.classList.add('bg-emerald-600', 'text-white');
+            renderExercises(cat);
+        }
+
+        function renderMeals() {
+            const renderSection = (id, items) => {
+                const el = document.getElementById(id);
+                el.innerHTML = items.map(m => `
+                    <div class="p-2.5 rounded-xl sub-card border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">${m.name}</span>
+                        <span class="font-bold text-orange-500">${m.calories} kcal</span>
+                    </div>
+                `).join('');
             };
-            onUserAuthenticated();
+            renderSection('breakfast-list', defaultMeals.breakfast);
+            renderSection('lunch-list', defaultMeals.lunch);
+            renderSection('dinner-list', defaultMeals.dinner);
         }
 
-        function onUserAuthenticated() {
-            document.getElementById('auth-signed-out').classList.add('hidden');
-            document.getElementById('auth-signed-in').classList.remove('hidden');
-            document.getElementById('user-avatar').src = currentUser.picture;
-            document.getElementById('user-name').innerText = currentUser.name;
-            document.getElementById('user-email').innerText = currentUser.email;
-            document.getElementById('welcome-title').innerText = `Welcome back, ${currentUser.name.split(' ')[0]}!`;
-            document.getElementById('login-status-badge').innerText = '● Synced with Google Account';
-
-            closeLoginModal();
-            loadUserData();
+        function logQuickMeal() {
+            state.mealsLogged += 1;
+            state.caloriesConsumed += 250;
+            saveUserData();
             updateUI();
-        }
-
-        function handleSignOut() {
-            currentUser = null;
-            document.getElementById('auth-signed-in').classList.add('hidden');
-            document.getElementById('auth-signed-out').classList.remove('hidden');
-            document.getElementById('welcome-title').innerText = 'Welcome to PulseHealth!';
-            document.getElementById('login-status-badge').innerText = '● Guest Mode (Local Storage)';
-            loadUserData();
-            updateUI();
-        }
-
-        // Local Storage Sync per User
-        function getUserKey() {
-            return currentUser ? `pulse_data_${currentUser.email}` : 'pulse_data_guest';
         }
 
         function loadUserData() {
-            const raw = localStorage.getItem(getUserKey());
+            const raw = localStorage.getItem(currentUser ? `pulse_data_${currentUser.email}` : 'pulse_data_guest');
             if (raw) {
                 state = JSON.parse(raw);
-            } else {
-                state = { water: 0, steps: 0, workoutsCompleted: 0, caloriesConsumed: 0 };
+                if (!state.completedDays30) state.completedDays30 = [];
+                if (!state.currentChallengeDay) state.currentChallengeDay = 1;
             }
         }
 
         function saveUserData() {
-            localStorage.setItem(getUserKey(), JSON.stringify(state));
+            localStorage.setItem(currentUser ? `pulse_data_${currentUser.email}` : 'pulse_data_guest', JSON.stringify(state));
         }
 
-        // Metrics Handlers
         function addWater(amount) {
             state.water = Math.min(5000, state.water + amount);
             saveUserData();
@@ -566,7 +970,11 @@
         }
 
         function updateUI() {
-            // Water
+            document.getElementById('dash-current-day-text').innerText = `Day ${state.currentChallengeDay} / 30`;
+            document.getElementById('dash-target30-bar').style.width = `${(state.completedDays30.length / 30) * 100}%`;
+            document.getElementById('streak-counter-header').innerText = `${state.streakDays} Days`;
+
+            // Metrics
             document.getElementById('dash-water-text').innerText = `${state.water} / 2500 ml`;
             document.getElementById('water-current-text').innerText = `${state.water} ml`;
             const waterPct = Math.min(100, Math.round((state.water / 2500) * 100));
@@ -574,80 +982,54 @@
             document.getElementById('water-fill').style.height = `${waterPct}%`;
             document.getElementById('water-percent-text').innerText = `${waterPct}%`;
 
-            // Steps
             document.getElementById('dash-steps-text').innerText = `${state.steps.toLocaleString()} / 10,000`;
             document.getElementById('walking-steps-text').innerText = state.steps.toLocaleString();
             const stepPct = Math.min(100, Math.round((state.steps / 10000) * 100));
             document.getElementById('dash-steps-bar').style.width = `${stepPct}%`;
             document.getElementById('walking-progress-bar').style.width = `${stepPct}%`;
-            
-            // Calc distance & calories
-            const distance = (state.steps * 0.00075).toFixed(1);
-            const calories = Math.round(state.steps * 0.04);
-            document.getElementById('walking-distance-text').innerText = `${distance} km`;
-            document.getElementById('walking-calories-text').innerText = `${calories} kcal`;
+            document.getElementById('walking-distance-text').innerText = `${(state.steps * 0.00075).toFixed(1)} km`;
+            document.getElementById('walking-calories-text').innerText = `${Math.round(state.steps * 0.04)} kcal`;
 
-            // Workouts
             document.getElementById('dash-workout-text').innerText = `${state.workoutsCompleted} Completed`;
             document.getElementById('dash-workout-bar').style.width = state.workoutsCompleted > 0 ? '100%' : '0%';
+
+            document.getElementById('dash-calories-text').innerText = `${state.caloriesConsumed} / 2000 kcal`;
+            document.getElementById('diet-total-calories').innerText = state.caloriesConsumed;
+            document.getElementById('dash-calories-bar').style.width = `${Math.min(100, Math.round((state.caloriesConsumed / 2000) * 100))}%`;
         }
 
-        // Exercise Renderer
-        function renderExercises(filter) {
-            const container = document.getElementById('exercise-cards-container');
-            container.innerHTML = '';
-            defaultExercises.forEach(ex => {
-                if (filter === 'all' || ex.category === filter) {
-                    const card = document.createElement('div');
-                    card.className = 'glass-card p-5 rounded-2xl space-y-3';
-                    card.innerHTML = `
-                        <span class="text-[10px] font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full uppercase">${ex.category}</span>
-                        <h3 class="font-bold text-slate-800 text-base">${ex.title}</h3>
-                        <p class="text-xs text-slate-500">${ex.desc}</p>
-                        <div class="flex justify-between items-center text-xs font-medium text-slate-600 pt-2 border-t border-slate-100">
-                            <span>⏱️ ${ex.duration}</span>
-                            <span>🔥 ${ex.calories}</span>
-                        </div>
-                        <button onclick="completeWorkout()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition">Mark Complete</button>
-                    `;
-                    container.appendChild(card);
-                }
-            });
-        }
-
-        function filterExercises(cat) {
-            document.querySelectorAll('.ex-filter-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                btn.classList.add('bg-white', 'text-slate-600');
-            });
-            event.target.classList.add('bg-emerald-600', 'text-white');
-            renderExercises(cat);
-        }
-
-        function completeWorkout() {
-            state.workoutsCompleted += 1;
-            saveUserData();
-            updateUI();
-        }
-
-        // Modal Controls
         function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
         function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
         function openConfigModal() { document.getElementById('config-modal').classList.remove('hidden'); }
         function closeConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
-
-        function loadSavedClientID() {
-            if (googleClientID) {
-                document.getElementById('client-id-input').value = googleClientID;
-            }
-        }
 
         function saveClientID() {
             const input = document.getElementById('client-id-input').value.trim();
             googleClientID = input;
             localStorage.setItem('pulse_google_client_id', input);
             closeConfigModal();
-            initGoogleIdentity();
+        }
+
+        function simulateGoogleLogin() {
+            currentUser = { name: 'Keerthan Kamboja', email: 'keerthan.dev@gmail.com', picture: 'https://placehold.co/80x80/10b981/ffffff?text=KK' };
+            document.getElementById('auth-signed-out').classList.add('hidden');
+            document.getElementById('auth-signed-in').classList.remove('hidden');
+            document.getElementById('user-avatar').src = currentUser.picture;
+            document.getElementById('user-name').innerText = currentUser.name;
+            document.getElementById('user-email').innerText = currentUser.email;
+            closeLoginModal();
+            loadUserData();
+            render30DayChallengeGrid();
+            updateUI();
+        }
+
+        function handleSignOut() {
+            currentUser = null;
+            document.getElementById('auth-signed-in').classList.add('hidden');
+            document.getElementById('auth-signed-out').classList.remove('hidden');
+            loadUserData();
+            render30DayChallengeGrid();
+            updateUI();
         }
     </script>
 </body>
