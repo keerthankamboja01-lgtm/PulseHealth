@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseHealth - Health Tracker with Google Login</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Identity Services (GSI) SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        },
+                        teal: {
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4;
+            color: #0f172a;
+            user-select: none; /* Anti-copy protection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(209, 250, 229, 0.8);
+        }
+        .water-wave {
+            transition: height 0.5s ease-in-out, background-color 0.3s;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between" oncontextmenu="return false;" onkeydown="return handleKeyProtection(event);">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-emerald-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">PulseHealth</span>
+                        <span class="text-[10px] block text-slate-400 font-semibold -mt-1">by Keerthan Kamboja</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex space-x-1 lg:space-x-2">
+                    <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-emerald-700 bg-emerald-50">Dashboard</button>
+                    <button id="nav-exercises" onclick="switchTab('exercises')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Exercises</button>
+                    <button id="nav-diet" onclick="switchTab('diet')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Diet</button>
+                    <button id="nav-water" onclick="switchTab('water')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Water</button>
+                    <button id="nav-walking" onclick="switchTab('walking')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50">Steps</button>
+                </nav>
+
+                <!-- Auth & Config Area -->
+                <div class="flex items-center space-x-3">
+                    <!-- Client ID Config Button -->
+                    <button onclick="openConfigModal()" title="Configure Google OAuth Client ID" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+
+                    <!-- Signed Out View -->
+                    <div id="auth-signed-out" class="flex items-center space-x-2">
+                        <button onclick="openLoginModal()" class="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl shadow-sm text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                            <span>Sign in</span>
+                        </button>
+                    </div>
+
+                    <!-- Signed In View -->
+                    <div id="auth-signed-in" class="hidden flex items-center space-x-3">
+                        <img id="user-avatar" src="https://placehold.co/80x80/10b981/ffffff?text=U" alt="User Profile" class="w-8 h-8 rounded-full border-2 border-emerald-500 object-cover shadow-sm">
+                        <div class="hidden sm:block text-left">
+                            <div id="user-name" class="text-xs font-bold text-slate-800 leading-none">Keerthan User</div>
+                            <div id="user-email" class="text-[10px] text-slate-400 truncate max-w-[120px]">user@google.com</div>
+                        </div>
+                        <button onclick="handleSignOut()" title="Sign Out" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- 1. DASHBOARD TAB VIEW -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/10 relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/30 border border-emerald-300/30 text-xs font-semibold text-emerald-100 mb-3">
+                        <span id="login-status-badge">● Guest Mode (Local Storage)</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold mb-2" id="welcome-title">Welcome to PulseHealth!</h1>
+                    <p class="text-emerald-100 text-sm sm:text-base mb-6">Track your fitness, nutrition, hydration, and walking steps with secure Google login synchronization.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="switchTab('exercises')" class="px-5 py-2.5 bg-white text-emerald-800 rounded-xl font-semibold text-sm hover:bg-emerald-50 transition shadow-md">Start Exercise Routine</button>
+                        <button onclick="openLoginModal()" id="hero-auth-btn" class="px-5 py-2.5 bg-emerald-700/50 hover:bg-emerald-700/70 border border-emerald-400/30 text-white rounded-xl font-semibold text-sm transition">Connect Google Account</button>
+                    </div>
+                </div>
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+            </div>
+
+            <!-- Daily Overview Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Water Card -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('water')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 1.293a1 1 0 011.414 0l6.364 6.364a9 9 0 11-12.728 0L7.293 1.293zm0 2.828L2.929 8.485a7 7 0 109.9 0L7.293 4.121z" clip-rule="evenodd"></path></svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full">Target: 2500 ml</span>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-800" id="dash-water-text">0 / 2500 ml</div>
+                    <p class="text-xs text-slate-500 mt-1">Water Hydration</p>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="dash-water-bar" class="bg-blue-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Steps Card -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('walking')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full">Target: 10,000</span>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-800" id="dash-steps-text">0 / 10000</div>
+                    <p class="text-xs text-slate-500 mt-1">Daily Steps</p>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="dash-steps-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Calories Consumed -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('diet')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path></svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full">Target: 2000 kcal</span>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-800" id="dash-calories-text">0 / 2000 kcal</div>
+                    <p class="text-xs text-slate-500 mt-1">Calories Consumed</p>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="dash-calories-bar" class="bg-orange-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Workouts Done -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer" onclick="switchTab('exercises')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">Goal: 1 Workout</span>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-800" id="dash-workout-text">0 Completed</div>
+                    <p class="text-xs text-slate-500 mt-1">Exercises Completed</p>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+                        <div id="dash-workout-bar" class="bg-purple-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. EXERCISES TAB VIEW -->
+        <section id="tab-exercises" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Exercises & Workouts</h2>
+                    <p class="text-slate-500 text-sm">Choose a workout routine to keep your body active and fit.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterExercises('all')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-sm" data-category="all">All</button>
+                    <button onclick="filterExercises('cardio')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="cardio">Cardio</button>
+                    <button onclick="filterExercises('strength')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="strength">Strength</button>
+                    <button onclick="filterExercises('flexibility')" class="ex-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50" data-category="flexibility">Flexibility</button>
+                </div>
+            </div>
+            <div id="exercise-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- 3. BALANCED DIET TAB VIEW -->
+        <section id="tab-diet" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Macro Summary -->
+                <div class="glass-card p-6 rounded-2xl space-y-6">
+                    <h3 class="text-lg font-bold text-slate-800">Daily Macro Intake</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-1">
+                                <span class="text-amber-700">Carbohydrates (50%)</span>
+                                <span id="macro-carbs-text">0 / 250g</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="macro-carbs-bar" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-1">
+                                <span class="text-rose-700">Protein (30%)</span>
+                                <span id="macro-protein-text">0 / 150g</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="macro-protein-bar" class="bg-rose-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold mb-1">
+                                <span class="text-emerald-700">Healthy Fats (20%)</span>
+                                <span id="macro-fat-text">0 / 65g</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="macro-fat-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
+                        <span class="text-xs font-semibold text-emerald-800 block">Total Consumed</span>
+                        <span class="text-3xl font-extrabold text-emerald-900" id="diet-total-calories">0</span>
+                        <span class="text-xs text-emerald-600"> / 2000 kcal Target</span>
+                    </div>
+                </div>
+
+                <!-- Meal Plan & Logs -->
+                <div class="glass-card p-6 rounded-2xl lg:col-span-2 space-y-6">
+                    <h3 class="text-lg font-bold text-slate-800">Meal Plan Log</h3>
+                    <div id="breakfast-section" class="space-y-2">
+                        <h4 class="font-bold text-slate-700 text-sm">🍳 Breakfast</h4>
+                        <div id="breakfast-list" class="space-y-2"></div>
+                    </div>
+                    <div id="lunch-section" class="space-y-2">
+                        <h4 class="font-bold text-slate-700 text-sm">🥗 Lunch</h4>
+                        <div id="lunch-list" class="space-y-2"></div>
+                    </div>
+                    <div id="dinner-section" class="space-y-2">
+                        <h4 class="font-bold text-slate-700 text-sm">🍲 Dinner</h4>
+                        <div id="dinner-list" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. WATER TRACKER TAB VIEW -->
+        <section id="tab-water" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto glass-card p-8 rounded-3xl text-center space-y-6 flex flex-col items-center">
+                <div class="relative w-36 h-52 border-4 border-blue-400/80 rounded-b-3xl rounded-t-lg overflow-hidden bg-blue-50/30 shadow-inner">
+                    <div id="water-fill" class="water-wave absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-600 to-cyan-400 opacity-90 w-full" style="height: 0%;"></div>
+                    <div class="absolute inset-0 flex items-center justify-center font-extrabold text-2xl text-slate-700 mix-blend-multiply" id="water-percent-text">0%</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-extrabold text-slate-800" id="water-current-text">0 ml</div>
+                    <div class="text-sm font-semibold text-slate-500 mt-1">Goal: 2500 ml</div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="addWater(250)" class="py-2.5 px-5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-sm rounded-xl border border-blue-200 transition">+250 ml</button>
+                    <button onclick="addWater(500)" class="py-2.5 px-5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-sm rounded-xl border border-blue-200 transition">+500 ml</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. WALKING TRACKER TAB VIEW -->
+        <section id="tab-walking" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto glass-card p-8 rounded-3xl text-center space-y-6">
+                <div class="text-5xl font-extrabold text-slate-800" id="walking-steps-text">0</div>
+                <p class="text-sm font-semibold text-slate-500">Daily Goal: 10,000 Steps</p>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div id="walking-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <span class="text-xs text-slate-400 font-semibold block">Distance</span>
+                        <span class="text-xl font-bold text-slate-700" id="walking-distance-text">0.0 km</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <span class="text-xs text-slate-400 font-semibold block">Est. Burned</span>
+                        <span class="text-xl font-bold text-slate-700" id="walking-calories-text">0 kcal</span>
+                    </div>
+                </div>
+                <div class="flex justify-center gap-3">
+                    <button onclick="addSteps(1000)" class="py-2 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-xl border border-emerald-200 transition">+1,000 Steps</button>
+                    <button onclick="addSteps(2500)" class="py-2 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-xl border border-emerald-200 transition">+2,500 Steps</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- GOOGLE LOGIN MODAL -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl relative border border-slate-100 text-center">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457-.336-2.836-.937-4.065"></path></svg>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-800">Sign in to PulseHealth</h3>
+                <p class="text-xs text-slate-500">Sync your daily fitness progress across devices securely with Google.</p>
+            </div>
+
+            <!-- Google GSI Official Render Button -->
+            <div id="google-gsi-button-container" class="flex justify-center min-h-[44px]"></div>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="flex-shrink mx-3 text-slate-400 text-[10px] font-bold uppercase tracking-wider">or test mode</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <!-- Simulated Login Fallback -->
+            <button onclick="simulateGoogleLogin()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+                🚀 Simulate Local Test Account Login
+            </button>
+        </div>
+    </div>
+
+    <!-- OAUTH CLIENT ID CONFIG MODAL -->
+    <div id="config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-slate-100">
+            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Google OAuth 2.0 Settings</h3>
+                <p class="text-xs text-slate-500 mt-1">Configure your official Google OAuth Client ID for production Google Identity Services.</p>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-xs font-semibold text-slate-700 block">Google Client ID</label>
+                <input type="text" id="client-id-input" placeholder="YOUR_CLIENT_ID.apps.googleusercontent.com" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-mono">
+                <p class="text-[10px] text-slate-400">Created in Google Cloud Console under APIs & Services > Credentials.</p>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="saveClientID()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition">Save & Initialize</button>
+                <button onclick="closeConfigModal()" class="py-2.5 px-4 bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl transition">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/80 backdrop-blur-md border-t border-emerald-100 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>&copy; 2026 Keerthan Kamboja. All Rights Reserved.</p>
+            <p class="font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                Developed by <span class="font-bold text-emerald-900">Keerthan Kamboja</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Key protection script
+        function handleKeyProtection(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'u' || e.key === 's')) {
+                return false;
+            }
+            return true;
+        }
+
+        // Global State
+        let currentUser = null;
+        let googleClientID = localStorage.getItem('pulse_google_client_id') || '';
+
+        const defaultExercises = [
+            { id: 1, title: 'Jumping Jacks', category: 'cardio', duration: '5 Mins', calories: '40 kcal', desc: 'Boost heart rate and burn calories quickly.' },
+            { id: 2, title: 'Push-Ups & Core', category: 'strength', duration: '10 Mins', calories: '75 kcal', desc: 'Strengthen chest, shoulders, and triceps.' },
+            { id: 3, title: 'Morning Stretch', category: 'flexibility', duration: '8 Mins', calories: '25 kcal', desc: 'Enhance mobility and release muscle tension.' }
+        ];
+
+        let state = {
+            water: 0,
+            steps: 0,
+            workoutsCompleted: 0,
+            caloriesConsumed: 0
+        };
+
+        // Initialize App on Load
+        window.onload = function() {
+            loadSavedClientID();
+            loadUserData();
+            renderExercises('all');
+            updateUI();
+            initGoogleIdentity();
+        };
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-50', 'text-emerald-700');
+                btn.classList.add('text-slate-600');
+            });
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-emerald-50', 'text-emerald-700');
+            }
+        }
+
+        // Google Identity Services (GSI) Integration
+        function initGoogleIdentity() {
+            if (typeof google !== 'undefined' && google.accounts && googleClientID) {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: googleClientID,
+                        callback: handleGoogleCredentialResponse
+                    });
+                    
+                    const container = document.getElementById('google-gsi-button-container');
+                    if (container) {
+                        google.accounts.id.renderButton(container, {
+                            theme: 'outline',
+                            size: 'medium',
+                            shape: 'pill'
+                        });
+                    }
+                } catch (err) {
+                    console.log('GSI Initialization pending valid Client ID');
+                }
+            }
+        }
+
+        // Parse JWT Google Token
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function handleGoogleCredentialResponse(response) {
+            const payload = parseJwt(response.credential);
+            if (payload) {
+                currentUser = {
+                    name: payload.name || 'Google User',
+                    email: payload.email,
+                    picture: payload.picture
+                };
+                onUserAuthenticated();
+            }
+        }
+
+        function simulateGoogleLogin() {
+            currentUser = {
+                name: 'Keerthan Kamboja',
+                email: 'keerthan.dev@gmail.com',
+                picture: 'https://placehold.co/80x80/10b981/ffffff?text=KK'
+            };
+            onUserAuthenticated();
+        }
+
+        function onUserAuthenticated() {
+            document.getElementById('auth-signed-out').classList.add('hidden');
+            document.getElementById('auth-signed-in').classList.remove('hidden');
+            document.getElementById('user-avatar').src = currentUser.picture;
+            document.getElementById('user-name').innerText = currentUser.name;
+            document.getElementById('user-email').innerText = currentUser.email;
+            document.getElementById('welcome-title').innerText = `Welcome back, ${currentUser.name.split(' ')[0]}!`;
+            document.getElementById('login-status-badge').innerText = '● Synced with Google Account';
+
+            closeLoginModal();
+            loadUserData();
+            updateUI();
+        }
+
+        function handleSignOut() {
+            currentUser = null;
+            document.getElementById('auth-signed-in').classList.add('hidden');
+            document.getElementById('auth-signed-out').classList.remove('hidden');
+            document.getElementById('welcome-title').innerText = 'Welcome to PulseHealth!';
+            document.getElementById('login-status-badge').innerText = '● Guest Mode (Local Storage)';
+            loadUserData();
+            updateUI();
+        }
+
+        // Local Storage Sync per User
+        function getUserKey() {
+            return currentUser ? `pulse_data_${currentUser.email}` : 'pulse_data_guest';
+        }
+
+        function loadUserData() {
+            const raw = localStorage.getItem(getUserKey());
+            if (raw) {
+                state = JSON.parse(raw);
+            } else {
+                state = { water: 0, steps: 0, workoutsCompleted: 0, caloriesConsumed: 0 };
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem(getUserKey(), JSON.stringify(state));
+        }
+
+        // Metrics Handlers
+        function addWater(amount) {
+            state.water = Math.min(5000, state.water + amount);
+            saveUserData();
+            updateUI();
+        }
+
+        function addSteps(count) {
+            state.steps += count;
+            saveUserData();
+            updateUI();
+        }
+
+        function updateUI() {
+            // Water
+            document.getElementById('dash-water-text').innerText = `${state.water} / 2500 ml`;
+            document.getElementById('water-current-text').innerText = `${state.water} ml`;
+            const waterPct = Math.min(100, Math.round((state.water / 2500) * 100));
+            document.getElementById('dash-water-bar').style.width = `${waterPct}%`;
+            document.getElementById('water-fill').style.height = `${waterPct}%`;
+            document.getElementById('water-percent-text').innerText = `${waterPct}%`;
+
+            // Steps
+            document.getElementById('dash-steps-text').innerText = `${state.steps.toLocaleString()} / 10,000`;
+            document.getElementById('walking-steps-text').innerText = state.steps.toLocaleString();
+            const stepPct = Math.min(100, Math.round((state.steps / 10000) * 100));
+            document.getElementById('dash-steps-bar').style.width = `${stepPct}%`;
+            document.getElementById('walking-progress-bar').style.width = `${stepPct}%`;
+            
+            // Calc distance & calories
+            const distance = (state.steps * 0.00075).toFixed(1);
+            const calories = Math.round(state.steps * 0.04);
+            document.getElementById('walking-distance-text').innerText = `${distance} km`;
+            document.getElementById('walking-calories-text').innerText = `${calories} kcal`;
+
+            // Workouts
+            document.getElementById('dash-workout-text').innerText = `${state.workoutsCompleted} Completed`;
+            document.getElementById('dash-workout-bar').style.width = state.workoutsCompleted > 0 ? '100%' : '0%';
+        }
+
+        // Exercise Renderer
+        function renderExercises(filter) {
+            const container = document.getElementById('exercise-cards-container');
+            container.innerHTML = '';
+            defaultExercises.forEach(ex => {
+                if (filter === 'all' || ex.category === filter) {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card p-5 rounded-2xl space-y-3';
+                    card.innerHTML = `
+                        <span class="text-[10px] font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full uppercase">${ex.category}</span>
+                        <h3 class="font-bold text-slate-800 text-base">${ex.title}</h3>
+                        <p class="text-xs text-slate-500">${ex.desc}</p>
+                        <div class="flex justify-between items-center text-xs font-medium text-slate-600 pt-2 border-t border-slate-100">
+                            <span>⏱️ ${ex.duration}</span>
+                            <span>🔥 ${ex.calories}</span>
+                        </div>
+                        <button onclick="completeWorkout()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition">Mark Complete</button>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        function filterExercises(cat) {
+            document.querySelectorAll('.ex-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-600');
+            });
+            event.target.classList.add('bg-emerald-600', 'text-white');
+            renderExercises(cat);
+        }
+
+        function completeWorkout() {
+            state.workoutsCompleted += 1;
+            saveUserData();
+            updateUI();
+        }
+
+        // Modal Controls
+        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+        function openConfigModal() { document.getElementById('config-modal').classList.remove('hidden'); }
+        function closeConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
+
+        function loadSavedClientID() {
+            if (googleClientID) {
+                document.getElementById('client-id-input').value = googleClientID;
+            }
+        }
+
+        function saveClientID() {
+            const input = document.getElementById('client-id-input').value.trim();
+            googleClientID = input;
+            localStorage.setItem('pulse_google_client_id', input);
+            closeConfigModal();
+            initGoogleIdentity();
+        }
+    </script>
+</body>
+</html>
